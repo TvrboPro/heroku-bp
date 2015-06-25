@@ -1,0 +1,79 @@
+ /*  
+
+ Material Icons by google
+
+
+
+
+i.material-icons &#xE87C;
+
+
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+
+   */
+
+// Rules for sizing the icon.
+.material-icons.md-18 {
+    font-size: 18px;
+}
+
+.material-icons.md-24 {
+    font-size: 24px;
+}
+
+.material-icons.md-36 {
+    font-size: 36px;
+}
+
+.material-icons.md-48 {
+    font-size: 48px;
+}
+
+// Rules for using icons as black on a light background.
+.material-icons.md-dark {
+    color: rgba(0, 0, 0, 0.54);
+}
+
+.material-icons.md-dark.md-inactive {
+    color: rgba(0, 0, 0, 0.26);
+}
+
+// Rules for using icons as white on a dark background.
+.material-icons.md-light {
+    color: rgba(255, 255, 255, 1);
+}
+
+.material-icons.md-light.md-inactive {
+    color: rgba(255, 255, 255, 0.3);
+}
+
+ /*  
+
+EQUIDISTANT RESPONISVE ICONS 
+After placing your icons in an unordered list, there is just some simple math involved.
+
+100 / (# of icons - 1) = Width of li
+
+Then, we set the text-align properties to left and right and set their width to half of the width of the rest of the icons, 
+so (100/(#number of icons - 1))/2.
+  */
+
+.equidistant {
+    li {
+        width: 25%;
+        height: 50px;
+        float: left;
+        list-style: none;
+        text-align: center;
+        display: inline-block;
+        &:first-child {
+            text-align: left;
+            width: 12.5%;
+        }
+        &:last-child {
+            text-align: right;
+            width: 12.5%;
+        }
+    }
+}

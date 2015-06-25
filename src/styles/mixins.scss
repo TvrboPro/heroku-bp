@@ -1,0 +1,50 @@
+ /*  
+
+     @include font-size(16px);
+ */
+
+@function calculateRem($size) {
+    $remSize: $size / 16px;
+    @return $remSize * 1rem;
+}
+
+@mixin font-size($size) {
+    font-size: $size;
+    font-size: calculateRem($size);
+}
+
+ /*  
+
+ .element {
+  @include size(100%, 30px);
+}
+
+ */
+
+@mixin size($width, $height: $width) {
+    width: $width;
+    height: $height;
+}
+
+/*   @include pad-ratio(16, 9);  */
+
+@mixin pad-ratio($x, $y, $selector: iframe) {
+    position: relative;
+    padding: 0 0 percentage($y / $x) 0;
+    height: 0;
+    #{$selector} {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+    }
+}
+
+@mixin position($type, $left: null, $right: null, $top: null, $bottom: null) {
+    position: $type;
+    top: $top;
+    right: $right;
+    bottom: $bottom;
+    left: $left;
+}

@@ -1,0 +1,115 @@
+ /*  
+
+.item-wrap
+  .item-icon
+  .item-content
+    .item-header Hello
+    | Lorem ipsun dolor sit amet
+
+.item-wrap
+  .item-image
+    img(src="http://placehold.it/350x150")
+  .item-content
+    .item-header Hello
+    | Lorem ipsun dolor sit amet
+
+  */
+
+.item-wrap {
+    display: list-item;
+    table-layout: fixed;
+    list-style-type: none;
+    list-style-position: outside;
+    padding: 0.3em 0em;
+    line-height: 1.2;
+    &:after {
+        content: '';
+        display: block;
+        height: 0;
+        clear: both;
+        visibility: hidden;
+    }
+}
+
+/* list-image */
+.item-image {
+    display: table-cell;
+    background-color: transparent;
+    margin: 0em;
+    padding-right: 0.5em;
+    vertical-align: middle;
+    /*  vertical-align: top; */
+    img {
+        vertical-align: middle;
+        display: inline-block;
+    }
+}
+
+/* Icon */
+.item-icon {
+    display: table-cell;
+    margin: 0em;
+    padding-top: 0.1rem;
+    padding-right: 0.3em;
+    vertical-align: middle;
+    width: 65px;
+    height: 65px;
+    /*    
+    vertical-align: top; */
+}
+
+.item-icon + .item-content {
+    display: table-cell;
+    padding: 0em 0em 0em 0.5em;
+    vertical-align: middle;
+}
+
+/* Content */
+.item-content {
+    display: table-cell;
+    vertical-align: middle;
+    line-height: 1.2em;
+    .item-header {
+        display: block;
+        margin: 0em;
+        font-weight: bold;
+    }
+}
+
+.table {
+    display: table;
+    border-collapse: separate;
+    word-wrap: break-word;
+}
+
+.cell {
+    display: table-cell;
+}
+
+ /*  
+
+  Use pseudo elements to occupy space 
+
+.main {
+  background: #DDD;
+  display: table;
+  margin: 1em 0;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.main:before,
+.main:after {
+  content: '';
+  display: table-cell;
+  -webkit-transition: width .5s ease;
+  transition: width .5s ease;
+  -webkit-transition-delay: .0625s;
+  transition-delay: .0625s;
+}
+
+
+.sample1:before { width: 67%; }
+.sample1:after { width: 33%; }
+
+  */

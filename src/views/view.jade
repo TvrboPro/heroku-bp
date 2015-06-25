@@ -1,0 +1,16 @@
+#view.view
+  h3(translate) Second View
+
+#feed
+  h6.g-medium #080MANGO
+  .list
+    .list__item.text--center(ng-repeat="entry in entries", ng-class="{twitter: entry.screen_name, instagram: entry.imageURL}")
+      //- TWITTER
+      div(ng-if="entry.screen_name")
+        a.top__bar.g-medium.text--uppercase(ng-href="http://www.twitter.com/{{entry.screen_name}}", target="_blank") {{'@' + entry.screen_name}}  
+        p.mid__bar.g-book(ng-bind-html="entry.text")
+        p.bottom__bar.g-book.text--uppercase(am-time-ago="entry.date")
+      //- INSTAGRAM
+      div(ng-if="entry.imageURL")
+        a(ng-href="{{entry.link}}", target="_blank")
+          img.is--responsive(ng-src="{{entry.imageURL}}")

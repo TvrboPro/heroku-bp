@@ -1,0 +1,34 @@
+ /*  
+
+<!--[if lt IE 9 ]>    <html class="lt-ie9"> <![endif]-->
+
+  */
+
+.an-example {
+    // put the IE9 and 'other' browser CSS declarations here
+    .lt-ie9 & {
+        // put the IE8 and below CSS declarations here
+        /* IE8 and below */
+        // if you need IE7 as well then prefix the CSS with a *
+        /* IE7 and below */
+        // if you need IE6 as well then prefix the CSS with a _
+        /* IE6 */
+    }
+}
+
+body {
+    // put the IE9 and 'other' browser CSS declarations here
+    width: 100%;
+    margin: 0 auto;
+    .lt-ie9 & {
+        // put the IE8 and below CSS declarations here
+        /* IE8 and below */
+        width: 940px;
+        margin: 0 auto;
+        background: green;
+        // if you need IE7 as well then prefix the CSS with a *
+        /* IE7 and below */
+        // if you need IE6 as well then prefix the CSS with a /
+        /* IE6 */
+    }
+}
