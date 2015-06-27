@@ -17,7 +17,7 @@ angular.module('tvrbo', ['ngRoute', 'tvrbo.services', 'gettext'])
     // $locationProvider.html5Mode(true);
 })
 
-.run(function(gettextCatalog, $lang, amMoment){
+.run(function(gettextCatalog, $lang){
 
   gettextCatalog.setCurrentLanguage($lang);
 

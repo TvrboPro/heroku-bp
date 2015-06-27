@@ -3,6 +3,13 @@ var gulp = require('gulp'),
     shell = require('gulp-shell');
 
 ////////////////////////
+// TOOLS
+gulp.task('bower', function() {
+  var bower = require('gulp-bower');
+  return bower().pipe(gulp.dest('src/vendor'));
+});
+
+////////////////////////
 // CLIENT WEB SITE
 
 // Media
@@ -61,15 +68,19 @@ gulp.task('javascript', function() {
   var uglify = require('gulp-uglify');
   var rename = require('gulp-rename');
   var concat = require('gulp-concat');
+  var ngAnnotate = require('gulp-ng-annotate');
 
   return gulp.src(['src/scripts/**/*.js'])
     .pipe(concat('index.js'))
     .pipe(gulp.dest('www/scripts'))
     .pipe(rename({ suffix: '.min' }))
-    .pipe(uglify({mangle: false}))
+    .pipe(ngAnnotate())
+    .pipe(uglify())
+    // .pipe(uglify({mangle: false}))
     .pipe(gulp.dest('www/scripts'));
 });
 
+// VENDOR
 
 gulp.task('jsVendor', function() {
   var uglify = require('gulp-uglify');
@@ -79,7 +90,9 @@ gulp.task('jsVendor', function() {
   // gulp.src('src/vendor/*.map')
   // .pipe(gulp.dest('www/scripts'));
 
-  return gulp.src(['src/vendor/angular.min.js', 'src/vendor/angular-route.js', 'src/vendor/angular-gettext.min.js'])
+  return gulp.src(['src/vendor/angular/angular.min.js', 
+      'src/vendor/angular-route/angular-route.min.js', 
+      'src/vendor/angular-gettext/dist/angular-gettext.min.js'])
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('www/scripts'))
     .pipe(rename({ suffix: '.min' }))
@@ -237,11 +250,32 @@ gulp.task('po:compile', function () {
 
 ////////////////////////
 // Clean
-gulp.task('clean', function() {
-  var clean = require('gulp-clean');
+gulp.task('clean', function(cb) {
+  var del = require('del');
+  del(['www/**/*'], cb);
+});
 
-  return gulp.src(['www/*'])
-    .pipe(clean());
+////////////////////////
+// HTML readme
+gulp.task('readme', function() {
+  var fs = require('fs');
+  var markdown = require('markdown').markdown;
+  var gOpen = require("gulp-open");
+  var md = fs.readFileSync('README.md').toString();
+  var content = markdown.toHTML( md );
+  var markdownCSS = '<style>h1,h2,h3,h4,h5,h6,p,blockquote {margin: 0;padding: 0;  }body {font-family: "Helvetica Neue", Helvetica, "Hiragino Sans GB", Arial, sans-serif;font-size: 13px;line-height: 18px;color: #737373;background-color: white;margin: 10px 13px 10px 13px;  }table {margin: 10px 0 15px 0;border-collapse: collapse;  }td,th { border: 1px solid #ddd;padding: 3px 10px;  }th {padding: 5px 10px;  }a {color: #0069d6;  }a:hover {color: #0050a3;text-decoration: none;  }a img {border: none;}  p {margin-bottom: 9px;}h1,h2,h3,h4,  h5,h6 {color: #404040;line-height: 36px;  }h1 {margin-bottom: 18px;font-size: 30px;  }h2 {font-size: 24px;  }h3 {font-size: 18px;  }h4 {font-size: 16px;  }h5 {font-size: 14px;  }h6 {font-size: 13px;  }hr {margin: 0 0 19px;border: 0;border-bottom: 1px solid #ccc;  }blockquote {padding: 13px 13px 21px 15px;margin-bottom: 18px;font-family:georgia,serif;font-style: italic;  }blockquote:before {content:"\201C";font-size:40px;margin-left:-10px;font-family:georgia,serif;color:#eee;  }blockquote p {font-size: 14px;font-weight: 300;line-height: 18px;margin-bottom: 0;font-style: italic;  }code, pre {font-family: Monaco, Andale Mono, Courier New, monospace;  }code {background-color: #fee9cc;color: rgba(0, 0, 0, 0.75);padding: 1px 3px;font-size: 12px;-webkit-border-radius: 3px;-moz-border-radius: 3px;border-radius: 3px;  }pre {display: block;padding: 14px;margin: 0 0 18px;line-height: 16px;font-size: 11px;border: 1px solid #d9d9d9;white-space: pre-wrap;word-wrap: break-word;  }pre code {background-color: #fff;color:#737373;font-size: 11px;padding: 0;  }sup {font-size: 0.83em;vertical-align: super;line-height: 0;}  * {-webkit-print-color-adjust: exact;  }@media screen and (min-width: 914px) {body {width: 854px;margin:10px auto;}  }@media print {body,code,pre code,h1,h2,h3,h4,h5,h6 {color: black;    }table, pre {page-break-inside: avoid;}  }</style>';
+
+  var html = "<html><head><meta charset='UTF-8'> <meta http-equiv='X-UA-Compatible' content='IE=edge'><style>" + markdownCSS + "</style></head><body>" + content + "</body></html>";
+  fs.writeFileSync('README.html', html);
+
+  // Launch
+  gulp.src("./README.html")
+    .pipe(gOpen());
+
+  // Clean
+  setTimeout(function(){
+    fs.unlink('README.html');
+  }, 5000);
 });
 
 // Groups
@@ -265,15 +299,21 @@ gulp.task('make', function(cb) {
 
 // Default task
 gulp.task('default', function() {
-  console.log("\nAvailable actions:\n");
-  console.log("   $ gulp make         Compile the web files to 'www/{client,admin}'");
-  console.log("   $ gulp debug        Compile, start the app locally and reload with Nodemon");
-  console.log("   $ gulp po:extract   Generate the translation template");
-  console.log("   $ gulp po:compile   Generate the JSON files for each language");
+  var gutil = require('gulp-util');
+  
+  console.log("\nUsage:");
+  console.log("----------------");
+  console.log(" $ " + gutil.colors.cyan("gulp make") + "          Compiles the app from src/ to www/");
+  console.log(" $ " + gutil.colors.cyan("gulp debug") + "         Compile, start the app locally and reload with Nodemon");
+  console.log(" $ " + gutil.colors.cyan("gulp po:extract") + "    Generate the translation template (po/template.pot)");
+  console.log(" $ " + gutil.colors.cyan("gulp po:compile") + "    Generate the files for each language (po/*.js)");
   console.log("  ");
-  console.log("   $ gulp start        Start the server as a daemon (implies gulp make)");
-  console.log("   $ gulp restart      Restart the server (implies gulp make)");
-  console.log("   $ gulp stop         Stop the server\n");
+  console.log(" $ " + gutil.colors.cyan("gulp bower") + "         Downloads the dependencies from bower.json to src/vendor");
+  console.log(" $ " + gutil.colors.cyan("gulp readme") + "        Mostra el README.md del projecte en el navegador");
+  console.log("  ");
+  console.log(" $ " + gutil.colors.cyan("gulp start") + "         Start the server as a daemon (implies gulp make)");
+  console.log(" $ " + gutil.colors.cyan("gulp restart") + "       Restart the server (implies gulp make)");
+  console.log(" $ " + gutil.colors.cyan("gulp stop") + "          Stop the server");
   console.log("  ");
 });
 
@@ -281,7 +321,7 @@ gulp.task('default', function() {
 gulp.task('debug', ['make'], function () {
   var nodemon = require('gulp-nodemon');
 
-  nodemon({ script: 'server.js', ext: 'html jade js css scss ', ignore: ['test', 'www', 'node_modules'], nodeArgs: ['--debug']  })
+  nodemon({ script: 'server.js', ext: 'html jade js css scss', ignore: ['test', 'www', 'node_modules'], nodeArgs: ['--debug']  })
     .on('change', ['make'])
     .on('restart', function () {
       console.log('App restarted');

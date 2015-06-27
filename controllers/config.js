@@ -34,7 +34,7 @@ var defaults = {
 
     USE_HTTP: true,
     USE_HTTPS: false,
-    USE_MONGODB: true,
+    USE_MONGODB: false,
     USE_PRERENDER: false,
     USE_CACHE: true,
     USE_URL_ALIAS: false,

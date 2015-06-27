@@ -8,10 +8,6 @@ angular.module('tvrbo.services', [])
 		// , ...
 	};
 })
-.factory('DATA', function() {
-	var data = {};
-	return data;
-})
 .factory('$lang', function(){
 
 	// Detect and provide the current language
