@@ -1,0 +1,15 @@
+{
+  "name": "combate",
+  "version": "2.0.0",
+  "authors": [
+    "Jordi Moraleda <jordi@tvrbo.com>",
+    "Pol Monés <pol@tvrbo.pro>"
+  ],
+  "description": "Combate",
+  "dependencies": {
+    "angular": "~1.4.1",
+    "modernizr": "~2.8.3",
+    "angular-route": "~1.4.1",
+    "angular-gettext": "~2.1.0"
+  }
+}
