@@ -1,6 +1,7 @@
 // Load plugins
 var gulp = require('gulp'),
-    shell = require('gulp-shell');
+    shell = require('gulp-shell'),
+    config = require(__dirname + '/controllers/config.js');
 
 ////////////////////////
 // TOOLS
@@ -70,20 +71,25 @@ gulp.task('javascript', function() {
   var concat = require('gulp-concat');
   var ngAnnotate = require('gulp-ng-annotate');
 
-  return gulp.src(['src/scripts/**/*.js'])
+  var p = gulp.src(['src/scripts/**/*.js'])
     .pipe(concat('index.js'))
-    .pipe(gulp.dest('www/scripts'))
-    .pipe(rename({ suffix: '.min' }))
-    .pipe(ngAnnotate())
-    .pipe(uglify())
-    // .pipe(uglify({mangle: false}))
-    .pipe(gulp.dest('www/scripts'));
+
+  if(!config.IS_PRODUCTION)
+    p.pipe(gulp.dest('www/scripts'));
+
+  p.pipe(rename({ suffix: '.min' }))
+    .pipe(ngAnnotate());
+
+  if(config.IS_PRODUCTION)
+    p.pipe(uglify());
+
+  return p.pipe(gulp.dest('www/scripts'));
 });
 
 // VENDOR
 
 gulp.task('jsVendor', function() {
-  var uglify = require('gulp-uglify');
+  // var uglify = require('gulp-uglify');
   var rename = require('gulp-rename');
   var concat = require('gulp-concat');
 
@@ -96,7 +102,7 @@ gulp.task('jsVendor', function() {
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('www/scripts'))
     .pipe(rename({ suffix: '.min' }))
-    .pipe(uglify({mangle: false}))
+    // .pipe(uglify({mangle: false}))
     .pipe(gulp.dest('www/scripts'));
 });
 
@@ -106,7 +112,7 @@ gulp.task('cssVendor', function() {
   var minifycss = require('gulp-minify-css');
   
   return gulp.src(['src/vendor/**/*.css'])
-    .pipe(sass({errLogToConsole: true}))
+    // .pipe(sass({errLogToConsole: true}))
     .pipe(concat('vendor.min.css'))
     .pipe(minifycss())
     .pipe(gulp.dest('www/styles'));

@@ -4,7 +4,13 @@
 var http = require('http');
 // var https = require('https');
 var express = require('express');
+var session = require('express-session');
+var bodyParser = require('body-parser');
+var methodOverride = require('method-override');
+var cookieParser = require('cookie-parser');
+var serveStatic = require('serve-static');
 var mongoose = require('mongoose');
+var MongoStore = require('connect-mongo')(session);
 var config = require('./controllers/config.js');
 var api = require(__dirname + '/controllers/server.api.js');
 var cache = require(__dirname + '/controllers/server.cache.js');
@@ -53,86 +59,29 @@ var TvrboApp = function() {
         // see server.api.js
         // automatic generator for app.get('/api/users', func_name), ...
 
-        var apiRoutes = api.getRoutes();
-        for(var g in apiRoutes.get) {
-            if(apiRoutes.get.hasOwnProperty(g)) {
-                self.app.get(g, apiRoutes.get[g]);
+        for(var g in api.routes.get) {
+            if(api.routes.get.hasOwnProperty(g)) {
+                self.app.get(g, api.routes.get[g]);
             }
         }
-        for(var p in apiRoutes.post) {
-            if(apiRoutes.post.hasOwnProperty(p)) {
-                self.app.post(p, apiRoutes.post[p]);
+        for(var p in api.routes.post) {
+            if(api.routes.post.hasOwnProperty(p)) {
+                self.app.post(p, api.routes.post[p]);
             }
         }
-        for(var t in apiRoutes.put) {
-            if(apiRoutes.put.hasOwnProperty(t)) {
-                self.app.put(t, apiRoutes.put[t]);
+        for(var t in api.routes.put) {
+            if(api.routes.put.hasOwnProperty(t)) {
+                self.app.put(t, api.routes.put[t]);
             }
         }
-        for(var d in apiRoutes.delete) {
-            if(apiRoutes.delete.hasOwnProperty(d)) {
-                self.app.delete(d, apiRoutes.delete[d]);
+        for(var d in api.routes.delete) {
+            if(api.routes.delete.hasOwnProperty(d)) {
+                self.app.delete(d, api.routes.delete[d]);
             }
         }
     };
 
-    self.initializeServer = function(doneCallback) {
-
-        self.app = express();
-
-        if(config.ALLOW_CORS) {
-            self.app.use(function(req, res, next){
-                res.setHeader('Access-Control-Allow-Origin', '*');
-                next();
-            });
-        }
-
-        if(config.USE_PRERENDER)
-            self.app.use(require('prerender-node').set('prerenderServiceUrl', config.PRERENDER_URL));
-        
-        self.app.use(express.bodyParser());
-        self.app.use(express.methodOverride());
-
-        // SERVER SETTINGS
-        if(config.ENSURE_WWW && config.DOMAIN) {
-            self.app.all(/.*/, function(req, res, next) {
-              var host = req.header("host");
-              if(host == config.DOMAIN)
-                res.redirect(301, "http://www." + config.DOMAIN);
-              else
-                return next();
-            });
-        }
-        
-        // Admin password
-        if(config.ADMIN_HTTP_USER)
-            self.app.use('/admin', express.basicAuth(config.ADMIN_HTTP_USER, config.ADMIN_HTTP_PASSWORD));
-
-        if(config.HTTP_USER && config.HTTP_PASSWORD) {
-            self.app.use(express.basicAuth(config.HTTP_USER, config.HTTP_PASSWORD));
-        }
-        self.app.use(self.app.router);
-        if(config.USE_URL_ALIAS) self.app.use(alias);
-        if(config.USE_CACHE) self.initializeCacheRoutes();
-
-        // admin
-        self.app.use('/admin', express.static('./www/admin'));
-        // client
-        self.app.use(express.static('./www'));
-        self.initializeAPIRoutes();
-
-        // SSL
-        if(config.USE_HTTPS) {
-            self.privateKey  = fs.readFileSync(config.KEY_FILE, 'utf8');
-            self.certificate = fs.readFileSync(config.CERT_FILE, 'utf8');
-
-            self.sslCredentials = {key: privateKey, cert: certificate};
-            
-            if(config.CA_FILE)
-                self.ca = fs.readFileSync(config.CA_FILE, 'utf8');
-        }
-
-        // DATABASE
+    self.initializeDatabase = function(doneCallback){
         if(config.USE_MONGODB) {
 
             // Check that the server is listening
@@ -165,7 +114,7 @@ var TvrboApp = function() {
 
                 mongoose.connect(mongoStr, {server: {auto_reconnect:true}});
 
-                doneCallback();
+                doneCallback(mongoose.connection);
             });
             s.on('data', function(e) {});
             s.on('error', function(e) {
@@ -177,7 +126,86 @@ var TvrboApp = function() {
             });
         }
         else 
-            doneCallback(); // continue
+            doneCallback(null); // continue
+    };
+
+    self.initializeServer = function() {
+
+        self.app = express();
+
+        if(config.ALLOW_CORS) {
+            self.app.use(function(req, res, next){
+                res.setHeader('Access-Control-Allow-Origin', '*');
+                next();
+            });
+        }
+
+        if(config.USE_PRERENDER)
+            self.app.use(require('prerender-node').set('prerenderServiceUrl', config.PRERENDER_URL));
+        
+        self.app.use(bodyParser.json());
+        self.app.use(methodOverride('X-HTTP-Method'))          // Microsoft 
+        self.app.use(methodOverride('X-HTTP-Method-Override')) // Google/GData 
+        self.app.use(methodOverride('X-Method-Override'))      // IBM
+
+        // SERVER SETTINGS
+        if(config.ENSURE_WWW && config.DOMAIN) {
+            self.app.all(/.*/, function(req, res, next) {
+              var host = req.header("host");
+              if(host == config.DOMAIN)
+                res.redirect(301, "http://www." + config.DOMAIN);
+              else
+                return next();
+            });
+        }
+        
+        if(config.HTTP_USER && config.HTTP_PASSWORD) {
+            self.app.use(express.basicAuth(config.HTTP_USER, config.HTTP_PASSWORD));
+            console.log((new Date()).toJSON() + " | " + config.APP_NAME + " using HTTP Auth", "\n");
+        }
+
+        // Session management
+        self.initializeDatabase(function(mongooseConnection){
+            // Sessions
+            if(config.USE_SESSIONS && config.USE_MONGODB && mongooseConnection) {
+                self.app.use(cookieParser());
+
+                self.app.use(session({
+                    saveUninitialized: false,
+                    resave: false,
+                    secret: config.SESSIONS_SECRET,
+                    store: new MongoStore({ mongooseConnection: mongooseConnection
+                      // db: config.MONGODB_DB,
+                      // collection: config.SESSIONS_COLLECTION,
+                      // host: config.MONGODB_HOST,
+                      // port: config.MONGODB_PORT,
+                      // username: config.MONGODB_USER,
+                      // password: config.MONGODB_PASSWORD,
+                      // autoReconnect: true
+                    })
+                }));
+                console.log((new Date()).toJSON() + " | Storing sessions on collection " + config.SESSIONS_COLLECTION, "\n");
+            }
+
+            // API
+            self.initializeAPIRoutes();
+            if(config.USE_URL_ALIAS) self.app.use(alias);
+            if(config.USE_CACHE) self.initializeCacheRoutes();
+
+            // client
+            self.app.use(serveStatic(__dirname + "/www", {'index': ['index.html']}));
+
+            // SSL
+            if(config.USE_HTTPS) {
+                self.privateKey  = fs.readFileSync(config.KEY_FILE, 'utf8');
+                self.certificate = fs.readFileSync(config.CERT_FILE, 'utf8');
+
+                self.sslCredentials = {key: privateKey, cert: certificate};
+                
+                if(config.CA_FILE)
+                    self.ca = fs.readFileSync(config.CA_FILE, 'utf8');
+            }
+        });
     };
 
     self.initialize = function(cb) {
@@ -205,6 +233,7 @@ var TvrboApp = function() {
 
 // MAIN
 var tvrboApp = new TvrboApp();
-tvrboApp.initialize(tvrboApp.start);
+tvrboApp.initialize();
+tvrboApp.start();
 
 

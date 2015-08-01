@@ -18,6 +18,7 @@ var defaults = {
     APP_NAME: 'Tvrbo App',
     DOMAIN: 'boilerplate.herokuapp.com',
     ENSURE_WWW: false,
+    PATH_ALIAS: ['view'],
 
     INSTAGRAM_CLIENT_ID: "1234",
     INSTAGRAM_CLIENT_SECRET: "1234",

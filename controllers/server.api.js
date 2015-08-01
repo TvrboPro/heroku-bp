@@ -281,25 +281,23 @@ exports.setAccountAccessTokenFromCode = function(req, res){
 /* DO NOT REMOVE THIS FUNCTION */
 
 // API ROUTE LIST
-exports.getRoutes = function () {
-  return {
-    get: {
-      '/api/images': [ exports.getImages ],
-      '/api/tweets': [ exports.getTweets ],
-      '/callback': [ exports.setAccountAccessTokenFromCode ],
-      '/admin/api/available': [ exports.fetchCurrentContent ]
-    },
-    post: {
-      '/admin/api/twitter': [ exports.promoteTweet ],
-      '/admin/api/instagram': [ exports.promoteImage ]
-    },
-    put: {
-    },
-    'delete': {
-      '/admin/api/twitter/:id': [ exports.removeTweet ],
-      '/admin/api/instagram/:link': [ exports.removeImage ]
-    }
-  };
+exports.routes = {
+  get: {
+    '/api/images': [ exports.getImages ],
+    '/api/tweets': [ exports.getTweets ],
+    '/callback': [ exports.setAccountAccessTokenFromCode ],
+    '/admin/api/available': [ exports.fetchCurrentContent ]
+  },
+  post: {
+    '/admin/api/twitter': [ exports.promoteTweet ],
+    '/admin/api/instagram': [ exports.promoteImage ]
+  },
+  put: {
+  },
+  'delete': {
+    '/admin/api/twitter/:id': [ exports.removeTweet ],
+    '/admin/api/instagram/:link': [ exports.removeImage ]
+  }
 };
 
 console.log((new Date()).toJSON() + " | Enabling API routes (server.api.js)");

@@ -1,7 +1,7 @@
 var config = require('./config.js');
 
 // The routes to be redirected to index.html  (see src/scripts/app.js > $routeProvider)
-var angularPaths = ['view'];
+var angularPaths = config.PATH_ALIAS;
 
 if(config.USE_URL_ALIAS) {
     var url = require('url');
@@ -14,7 +14,7 @@ if(config.USE_URL_ALIAS) {
         else
             rg += angularPaths[i] + "|";
     }
-    var regex = new RegExp("^\/(" + rg + ")(.*)");
+    var regex = new RegExp("^\/" + rg);
 
     module.exports = function(req, res, next) {
         var parts = url.parse(req.url);
