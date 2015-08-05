@@ -43,9 +43,10 @@ var TvrboApp = function() {
     };
 
     // SERVER
-    self.initializeCacheRoutes = function() {
+    self.defineCacheRoutes = function() {
 
         // see server.cache.js
+        cache.populate();
         var cacheRoutes = cache.getRoutes();
         for (var c in cacheRoutes) {
             if(cacheRoutes.hasOwnProperty(c)) {
@@ -54,7 +55,7 @@ var TvrboApp = function() {
         }
     }; 
 
-    self.initializeAPIRoutes = function() {
+    self.defineAPIRoutes = function() {
 
         // see server.api.js
         // automatic generator for app.get('/api/users', func_name), ...
@@ -81,7 +82,7 @@ var TvrboApp = function() {
         }
     };
 
-    self.initializeDatabase = function(doneCallback){
+    self.startDatabaseConnection = function(doneCallback){
         if(config.USE_MONGODB) {
 
             // Check that the server is listening
@@ -165,7 +166,7 @@ var TvrboApp = function() {
         }
 
         // Session management
-        self.initializeDatabase(function(mongooseConnection){
+        self.startDatabaseConnection(function(mongooseConnection){
             // Sessions
             if(config.USE_SESSIONS && config.USE_MONGODB && mongooseConnection) {
                 self.app.use(cookieParser());
@@ -188,9 +189,9 @@ var TvrboApp = function() {
             }
 
             // API
-            self.initializeAPIRoutes();
+            self.defineAPIRoutes();
             if(config.USE_URL_ALIAS) self.app.use(alias);
-            if(config.USE_CACHE) self.initializeCacheRoutes();
+            if(config.USE_CACHE && config.IS_PRODUCTION) self.defineCacheRoutes();
 
             // client
             self.app.use(serveStatic(__dirname + "/www", {'index': ['index.html']}));
@@ -209,7 +210,6 @@ var TvrboApp = function() {
     };
 
     self.initialize = function(cb) {
-        if(config.USE_CACHE) cache.populate();
         self.initializeTerminationHandlers();
         self.initializeServer(cb);
     };

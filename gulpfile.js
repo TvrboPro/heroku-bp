@@ -324,13 +324,29 @@ gulp.task('default', function() {
 });
 
 // MAIN TASKS
-gulp.task('debug', ['make'], function () {
+gulp.task('debug', ['make', 'nodemon'], function () {
+  var watch = require('gulp-watch');
+  var batch = require('gulp-batch');
+  
+  watch('src/**/*.js', batch(function (events, done) { gulp.start(['jshint', 'javascript'], done); }));
+  watch('src/**/*.scss', batch(function (events, done) { gulp.start('scss', done); }));
+  watch('src/**/*.css', batch(function (events, done) { gulp.start('scss', done); }));
+  watch('src/**/*.jade', batch(function (events, done) { gulp.start('jade', done); }));
+  watch('src/**/*.html', batch(function (events, done) { gulp.start('html', done); }));
+  watch('src/**/*.{png,jpg,jpeg,tiff,gif,svg,mp4,mp4,ogg}', batch(function (events, done) { gulp.start('media', done); }));
+
+  console.log("gulp > Watching source files for changes...");
+});
+
+gulp.task('nodemon', function () {
   var nodemon = require('gulp-nodemon');
 
-  nodemon({ script: 'server.js', ext: 'html jade js css scss', ignore: ['test', 'www', 'node_modules'], nodeArgs: ['--debug']  })
-    .on('change', ['make'])
+  nodemon({ script: 'server.js', ext: 'js', ignore: ['src', 'tools', 'www', 'test', 'node_modules', 'admin'], nodeArgs: ['--debug']  })
+    .on('change', function(){
+      console.log('Server has changed, restarting...');
+    })
     .on('restart', function () {
-      console.log('App restarted');
+      console.log('Server restarted');
     });
 });
 

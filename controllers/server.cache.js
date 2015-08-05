@@ -1,6 +1,6 @@
 var config = require('./config.js');
 
-if(config.USE_CACHE) {
+if(config.USE_CACHE && config.IS_PRODUCTION) {
 
     var localCache = {};
     var fs = require('fs');
