@@ -14,7 +14,7 @@ if(config.USE_URL_ALIAS) {
         else
             rg += angularPaths[i] + "|";
     }
-    var regex = new RegExp("^\/" + rg);
+    var regex = new RegExp("^\/(" + rg + ")");
 
     module.exports = function(req, res, next) {
         var parts = url.parse(req.url);
