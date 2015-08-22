@@ -295,7 +295,15 @@ gulp.task('styles', ['scss'], function(){});
 
 gulp.task('make', function(cb) {
     var runSequence = require('run-sequence');
-    runSequence('clean', ['markup', 'scripts', 'styles', 'media', 'vendor', 'admin'/*, 'makeAdmin'*/], cb);
+    runSequence('clean', ['markup', 'scripts', 'styles', 'media', 'vendor', 'admin'/*, 'makeAdmin'*/], function (err) {
+      if (!err) return cb();
+      
+      //if any error happened in the previous tasks, exit with a code > 0
+      var exitCode = 2;
+      console.log('[ERROR] gulp make task failed', err);
+      console.log('[FAIL] gulp make task failed - exiting with code ' + exitCode);
+      return process.exit(exitCode);
+    });
 });
 
 // gulp.task('makeAdmin', function(cb) {
