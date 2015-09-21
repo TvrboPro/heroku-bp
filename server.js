@@ -3,10 +3,10 @@
 var http = require('http');
 var express = require('express');
 var session = require('express-session');
-var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var cookieParser = require('cookie-parser');
 var serveStatic = require('serve-static');
+var basicAuth = require('basic-auth-connect');
 var mongoose = require('mongoose');
 var MongoStore = require('connect-mongo')(session);
 var config = require('./controllers/config.js');
@@ -41,7 +41,7 @@ var TvrboApp = function() {
     };
 
     // SERVER
-    self.defineCacheRoutes = function() {
+    self.initializeCacheRoutes = function() {
 
         // see server.cache.js
         cache.populate();
@@ -53,7 +53,7 @@ var TvrboApp = function() {
         }
     }; 
 
-    self.defineAPIRoutes = function() {
+    self.initializeAPIRoutes = function() {
 
         // see server.api.js
         // automatic generator for app.get('/api/users', func_name), ...
@@ -80,7 +80,7 @@ var TvrboApp = function() {
         }
     };
 
-    self.startDatabaseConnection = function(doneCallback){
+    self.initializeDatabase = function(doneCallback){
         if(config.USE_MONGODB) {
 
             // Check that the server is listening
@@ -108,10 +108,10 @@ var TvrboApp = function() {
                 mongoose.connection.on('reconnected', function () { console.log('%s | MongoDB reconnected', (new Date()).toJSON(), "\n"); });
                 mongoose.connection.on('disconnected', function() {
                     console.log('%s | MongoDB disconnected!', (new Date()).toJSON(), "\n");
-                    mongoose.connect(mongoStr, {server: {auto_reconnect:true}});
+                    mongoose.connect(mongoStr, {server: {auto_reconnect: true }});
                 });
 
-                mongoose.connect(mongoStr, {server: {auto_reconnect:true}});
+                mongoose.connect(mongoStr, {server: {auto_reconnect: true }});
 
                 doneCallback(mongoose.connection);
             });
@@ -142,7 +142,6 @@ var TvrboApp = function() {
         if(config.USE_PRERENDER)
             self.app.use(require('prerender-node').set('prerenderServiceUrl', config.PRERENDER_URL));
         
-        self.app.use(bodyParser.json());
         self.app.use(methodOverride('X-HTTP-Method'))          // Microsoft 
         self.app.use(methodOverride('X-HTTP-Method-Override')) // Google/GData 
         self.app.use(methodOverride('X-Method-Override'))      // IBM
@@ -152,19 +151,19 @@ var TvrboApp = function() {
             self.app.all(/.*/, function(req, res, next) {
               var host = req.header("host");
               if(host == config.DOMAIN)
-                res.redirect(302, "http://www." + config.DOMAIN);
+                res.redirect(301, "http://www." + config.DOMAIN);
               else
                 return next();
             });
         }
         
         if(config.HTTP_USER && config.HTTP_PASSWORD) {
-            self.app.use(express.basicAuth(config.HTTP_USER, config.HTTP_PASSWORD));
+            self.app.use(basicAuth(config.HTTP_USER, config.HTTP_PASSWORD));
             console.log((new Date()).toJSON() + " | " + config.APP_NAME + " using HTTP Auth", "\n");
         }
 
         // Session management
-        self.startDatabaseConnection(function(mongooseConnection){
+        self.initializeDatabase(function(mongooseConnection){
             // Sessions
             if(config.USE_SESSIONS && config.USE_MONGODB && mongooseConnection) {
                 self.app.use(cookieParser());
@@ -173,37 +172,26 @@ var TvrboApp = function() {
                     saveUninitialized: false,
                     resave: false,
                     secret: config.SESSIONS_SECRET,
-                    store: new MongoStore({ 
-
-                        // Reusing the mongoose connection
-                        mongooseConnection: mongooseConnection
-
-                        // Using a direct connection
-                        // db: config.MONGODB_DB, collection: config.SESSIONS_COLLECTION, host: config.MONGODB_HOST, port: config.MONGODB_PORT, username: config.MONGODB_USER, password: config.MONGODB_PASSWORD, autoReconnect: true
+                    store: new MongoStore({ mongooseConnection: mongooseConnection
+                      // db: config.MONGODB_DB,
+                      // collection: config.SESSIONS_COLLECTION,
+                      // host: config.MONGODB_HOST,
+                      // port: config.MONGODB_PORT,
+                      // username: config.MONGODB_USER,
+                      // password: config.MONGODB_PASSWORD,
+                      // autoReconnect: true
                     })
                 }));
                 console.log((new Date()).toJSON() + " | Storing sessions on collection " + config.SESSIONS_COLLECTION, "\n");
             }
 
             // API
-            self.defineAPIRoutes();
+            self.initializeAPIRoutes();  // bodyParser > controllers > server.api.js
             if(config.USE_URL_ALIAS) self.app.use(alias);
-            if(config.USE_CACHE && config.IS_PRODUCTION) self.defineCacheRoutes();
+            if(config.USE_CACHE && config.IS_PRODUCTION) self.initializeCacheRoutes();
 
             // client
             self.app.use(serveStatic(__dirname + "/www", {'index': ['index.html']}));
-
-            // SSL
-            if(config.USE_HTTPS) {
-                var fs = require('fs');
-                self.privateKey  = fs.readFileSync(config.KEY_FILE, 'utf8');
-                self.certificate = fs.readFileSync(config.CERT_FILE, 'utf8');
-
-                self.sslCredentials = {key: privateKey, cert: certificate};
-                
-                if(config.CA_FILE)
-                    self.ca = fs.readFileSync(config.CA_FILE, 'utf8');
-            }
         });
     };
 
@@ -214,17 +202,9 @@ var TvrboApp = function() {
 
     self.start = function() {
 
-        // START SERVER
-        var httpServer, httpsServer;
-        var https = require('https');
-        if(config.USE_HTTP) {
-            httpServer = http.createServer(self.app);
-            httpServer.listen(config.HTTP_PORT);
-        }
-        if(config.USE_HTTPS) {
-            httpsServer = https.createServer(self.sslCredentials, self.app);
-            httpsServer.listen(config.HTTPS_PORT);
-        }
+        var httpServer;
+        httpServer = http.createServer(self.app);
+        httpServer.listen(config.HTTP_PORT);
 
         console.log((new Date()).toJSON() + " | " + config.APP_NAME + " listening on port(s)", config.USE_HTTP ? config.HTTP_PORT : "", config.USE_HTTPS ? config.HTTPS_PORT : "", "\n");
     };
@@ -234,3 +214,5 @@ var TvrboApp = function() {
 var tvrboApp = new TvrboApp();
 tvrboApp.initialize();
 tvrboApp.start();
+
+

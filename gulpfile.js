@@ -358,16 +358,24 @@ gulp.task('nodemon', function () {
     });
 });
 
+gulp.task('todo', shell.task([
+  'notes combate.server.js models/ controllers/ src/styles/ src/scripts/ src/views/ || echo "You need to install notes by running \'sudo npm install -g notes\' "'
+]));
+
+gulp.task('deps', shell.task([
+  'npm-dview || echo "You need to install npm-dview by running \'sudo npm install -g npm-dview\' "'
+]));
+
 gulp.task('start', ['make'], shell.task([
-  'forever start server.js 2>/dev/null || node server.js'
+  'pm2 start server.js 2>/dev/null || node server.js'
 ]));
 
 gulp.task('restart', ['make'], shell.task([
-  'forever restart server.js 2>/dev/null || echo "The forever command is not installed.\nTo stop the server, just hit Ctrl+C in the terminal where your Node app is running and launch it again" '
+  'pm2 restart server.js 2>/dev/null || echo "The pm2 command is not installed.\nTo stop the server, just hit Ctrl+C in the terminal where your Node app is running and launch it again" '
 ]));
 
 gulp.task('stop', shell.task([
-  'forever stop server.js 2>/dev/null || echo "The forever command is not installed.\nTo stop the server, just hit Ctrl+C in the terminal where your Node app is running" '
+  'pm2 stop server.js 2>/dev/null || echo "The pm2 command is not installed.\nTo stop the server, just hit Ctrl+C in the terminal where your Node app is running" '
 ]));
 
 // gulp.task('test', ['make'], function () {
