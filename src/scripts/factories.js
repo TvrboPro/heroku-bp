@@ -1,4 +1,4 @@
-angular.module('tvrbo.services', [])
+angular.module('tvrbo.factories', [])
 
 .factory('API', function($http) {
 	return {
@@ -41,4 +41,29 @@ angular.module('tvrbo.services', [])
 
 	language = language.substring(0, 2).toLowerCase();
 	return language;
-});
+})
+.factory('DATA', function(gettextCatalog) {
+	// Useful to persist local data
+	try {
+		localStorage.dataTestValue = 0;
+		delete localStorage.dataTestValue;
+	}
+	catch(e) {
+		return alert(gettextCatalog.getString("The local storage of your browser is not available and some capabilities may not be fully functional. \nCheck that your browser is not running in private mode. "));
+	}
+
+	var data = {};
+	var persist = function(){
+		localStorage.tvrboPersistentData = JSON.stringify(data);
+	};
+	var restore = function(){
+		if(localStorage.tvrboPersistentData) {
+			data = JSON.parse(localStorage.tvrboPersistentData);
+		}
+	};
+	restore();
+	data.persist = persist;
+	data.restore = restore;
+	return data;
+})
+;

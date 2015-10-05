@@ -1,11 +1,11 @@
 {
-  "name": "combate",
-  "version": "2.0.0",
+  "name": "boilerplate",
+  "version": "1.0.0",
   "authors": [
     "Jordi Moraleda <jordi@tvrbo.com>",
     "Pol Monés <pol@tvrbo.pro>"
   ],
-  "description": "Combate",
+  "description": "Heroku Boilerplate",
   "dependencies": {
     "angular": "~1.4.1",
     "modernizr": "~2.8.3",

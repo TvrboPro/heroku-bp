@@ -1,13 +1,35 @@
+// FILE PATHS
+var mediaPaths = ['src/media/**/*.jpg', 'src/media/**/*.jpeg', 'src/media/**/*.png', 'src/media/**/*.svg', 'src/media/**/*.gif', 'src/media/**/*.tiff', 'src/media/**/*.mp3', 'src/media/**/*.ogg'];
+var scssPaths = ['src/styles/index.scss'];
+
+var jadeSymbols = {};
+var jadePaths = 'src/{,views/}*.jade';
+var htmlPaths = ['src/{,views/}*.html'];
+var jsHintPaths = ['server.js', 'controllers/**/*.js', 'models/**/*.js', 'src/scripts/**/*.js'];
+var javascriptPaths = ['src/scripts/**/*.js'];
+var jsVendorPaths = [
+  'src/vendor/angular/angular.min.js', 
+  'src/vendor/angular-route/angular-route.min.js', 
+  'src/vendor/angular-gettext/dist/angular-gettext.min.js'
+];
+var cssVendorPaths = [];
+var fontVendorPaths = ['src/fonts/*'];
+var poExtractPaths = ['www/views/**/*.html', 'www/scripts/**/*.js'];
+var poCompilePaths = 'po/**/*.po';
+
+
 // Load plugins
 var gulp = require('gulp'),
     shell = require('gulp-shell'),
-    config = require(__dirname + '/controllers/config.js');
+    config = require(__dirname + '/controllers/config.js'),
+    livereload = require('gulp-livereload');
 
 ////////////////////////
 // TOOLS
 gulp.task('bower', function() {
   var bower = require('gulp-bower');
-  return bower().pipe(gulp.dest('src/vendor'));
+  return bower().pipe(gulp.dest('src/vendor'))
+    .pipe(livereload());
 });
 
 ////////////////////////
@@ -15,8 +37,9 @@ gulp.task('bower', function() {
 
 // Media
 gulp.task('media', function() {
-  return gulp.src(['src/media/**/*.jpg', 'src/media/**/*.jpeg', 'src/media/**/*.png', 'src/media/**/*.svg', 'src/media/**/*.gif', 'src/media/**/*.tiff', 'src/media/**/*.mp3', 'src/media/**/*.ogg'])
-    .pipe(gulp.dest('www/media'));
+  return gulp.src(mediaPaths)
+    .pipe(gulp.dest('www/media'))
+    .pipe(livereload());
 });
 
 // STYLE
@@ -27,83 +50,75 @@ gulp.task('scss', function() {
   var rename = require('gulp-rename');
   var concat = require('gulp-concat');
 
-  return gulp.src(['src/styles/index.scss'])
+  return gulp.src(scssPaths)
     .pipe(sass({errLogToConsole: true}))
     .pipe(concat('index.css'))
     .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 2.3'))
     .pipe(rename({ suffix: '.min' }))
     .pipe(minifycss())
-    .pipe(gulp.dest('www/styles'));
+    .pipe(gulp.dest('www/styles'))
+    .pipe(livereload());
 });
 
 // MARKUP
 gulp.task('jade', function() {
-  var localSymbols = {};
-  var jade = require('gulp-jade');
+  var jade = require('gulp-jade')
+  var templateCache = require('gulp-angular-templatecache');
 
-  return gulp.src('src/**/*.jade')
-  .pipe(jade({
-    locals: localSymbols
-  }))
-  .pipe(gulp.dest('www/'));
+  return gulp.src(jadePaths)
+  .pipe(jade({ locals: jadeSymbols }))
+  .pipe(gulp.dest('www'))
+  .pipe(templateCache({standalone: true}))
+  .pipe(gulp.dest('www/scripts'))
+  .pipe(livereload());
 });
 
 gulp.task('html', function() {
-  // var htmlmin = require('gulp-htmlmin');
+  var htmlmin = require('gulp-htmlmin');
 
-  return gulp.src(['src/{,views/}*.html'])
-//.pipe(htmlmin({collapseWhitespace: true}))
-    .pipe(gulp.dest('www/'));
+  return gulp.src(htmlPaths)
+    .pipe(htmlmin({collapseWhitespace: true}))
+    .pipe(gulp.dest('www/'))
+    .pipe(livereload());
 });
 
 // JAVASCRIPT
 gulp.task('jshint', function() {
   var jshint = require('gulp-jshint');
 
-  return gulp.src(['server.js', 'controllers/**/*.js', 'models/**/*.js', 'src/scripts/**/*.js', 'src/admin/scripts/**/*.js'])
+  return gulp.src(jsHintPaths)
     .pipe(jshint('.jshintrc'))
     .pipe(jshint.reporter('default'));
 });
 
-gulp.task('javascript', function() {
+gulp.task('javascript', ['jade'], function() {
   var uglify = require('gulp-uglify');
-  var rename = require('gulp-rename');
   var concat = require('gulp-concat');
   var ngAnnotate = require('gulp-ng-annotate');
 
-  var p = gulp.src(['src/scripts/**/*.js'])
-    .pipe(concat('index.js'))
-
-  if(!config.IS_PRODUCTION)
-    p.pipe(gulp.dest('www/scripts'));
-
-  p.pipe(rename({ suffix: '.min' }))
+  var p = gulp.src(javascriptPaths)
+    .pipe(concat('index.min.js'))
     .pipe(ngAnnotate());
 
   if(config.IS_PRODUCTION)
     p.pipe(uglify());
 
-  return p.pipe(gulp.dest('www/scripts'));
+  return p.pipe(gulp.dest('www/scripts'))
+    .pipe(livereload());
 });
 
 // VENDOR
 
 gulp.task('jsVendor', function() {
-  // var uglify = require('gulp-uglify');
   var rename = require('gulp-rename');
   var concat = require('gulp-concat');
 
-  // gulp.src('src/vendor/*.map')
-  // .pipe(gulp.dest('www/scripts'));
-
-  return gulp.src(['src/vendor/angular/angular.min.js', 
-      'src/vendor/angular-route/angular-route.min.js', 
-      'src/vendor/angular-gettext/dist/angular-gettext.min.js'])
+  return gulp.src(jsVendorPaths)
     .pipe(concat('vendor.js'))
     .pipe(gulp.dest('www/scripts'))
     .pipe(rename({ suffix: '.min' }))
-    // .pipe(uglify({mangle: false}))
-    .pipe(gulp.dest('www/scripts'));
+    .pipe(gulp.dest('www/scripts'))
+    .pipe(livereload());
 });
 
 gulp.task('cssVendor', function() {
@@ -111,132 +126,23 @@ gulp.task('cssVendor', function() {
   var sass = require('gulp-sass');
   var minifycss = require('gulp-minify-css');
   
-  return gulp.src(['src/vendor/**/*.css'])
-    // .pipe(sass({errLogToConsole: true}))
+  return gulp.src(cssVendorPaths)
     .pipe(concat('vendor.min.css'))
     .pipe(minifycss())
-    .pipe(gulp.dest('www/styles'));
+    .pipe(gulp.dest('www/styles'))
+    .pipe(livereload());
 });
 
 gulp.task('fontVendor', function() {
-  return gulp.src(['src/fonts/*'])
+  return gulp.src(fontVendorPaths)
     .pipe(gulp.dest('www/fonts'));
 });
-
-gulp.task('admin', function() {
-  return gulp.src(['src/admin/*'])
-    .pipe(gulp.dest('www/admin'));
-});
-
-
-////////////////////////
-// ADMIN SITE
-
-// STYLE
-// gulp.task('lessAdmin', function() {
-//   var less = require('gulp-less');
-//   var autoprefixer = require('gulp-autoprefixer');
-//   var minifycss = require('gulp-minify-css');
-//   var rename = require('gulp-rename');
-//   var concat = require('gulp-concat');
-
-//   return gulp.src(['src/admin/styles/index.less'])
-//     .pipe(less())
-//     .pipe(concat('index.css'))
-//     .pipe(autoprefixer('last 2 version', 'safari 5', 'ie 8', 'ie 9', 'opera 12.1', 'ios 6', 'android 2.3'))
-//     .pipe(rename({ suffix: '.min' }))
-//     .pipe(minifycss())
-//     .pipe(gulp.dest('www/admin/styles'));
-// });
-
-// gulp.task('cssVendorAdmin', function() {
-//   var concat = require('gulp-concat');
-//   var minifycss = require('gulp-minify-css');
-//   return gulp.src([
-//       'src/admin/vendor/bootstrap.min.css', 
-//       'src/admin/vendor/sb-admin-2.css', 
-//       'src/admin/vendor/plugins/metisMenu/metisMenu.min.css',
-//       'src/admin/vendor/plugins/morris/morris.min.css'
-//     ])
-//     .pipe(concat('vendor.min.css'))
-//     .pipe(minifycss())
-//     .pipe(gulp.dest('www/admin/styles'));
-// });
-
-// // MARKUP
-// gulp.task('jadeAdmin', function() {
-//   var localSymbols = {};
-//   var jade = require('gulp-jade');
-
-//   return gulp.src('src/admin/**/*.jade')
-//   .pipe(jade({
-//     locals: localSymbols
-//   }))
-//   .pipe(gulp.dest('www/admin/'));
-// });
-
-// gulp.task('htmlAdmin', function() {
-//   // var htmlmin = require('gulp-htmlmin');
-
-//   return gulp.src(['src/admin/**/*.html'])
-// //.pipe(htmlmin({collapseWhitespace: true}))
-//     .pipe(gulp.dest('www/admin/'));
-// });
-
-// gulp.task('javascriptAdmin', function() {
-//   var uglify = require('gulp-uglify');
-//   var rename = require('gulp-rename');
-//   var concat = require('gulp-concat');
-
-//   return gulp.src(['src/admin/scripts/**/*.js'])
-//     .pipe(concat('index.js'))
-//     .pipe(gulp.dest('www/admin/scripts'))
-//     .pipe(rename({ suffix: '.min' }))
-//     .pipe(uglify({mangle: false}))
-//     .pipe(gulp.dest('www/admin/scripts'));
-// });
-
-// gulp.task('jsVendorAdmin', function() {
-//   var rename = require('gulp-rename');
-//   var concat = require('gulp-concat');
-//   // gulp.src('src/admin/vendor/*.map')
-//   // .pipe(gulp.dest('www/scripts'));
-
-//   return gulp.src([
-//       'src/admin/vendor/jquery.js', 
-//       'src/admin/vendor/angular.min.js', 'src/admin/vendor/angular-animate.min.js', 'src/admin/vendor/angular-cookies.min.js', 'src/admin/vendor/angular-route.min.js', 
-//       'src/admin/vendor/bootstrap.min.js', 
-//       'src/admin/vendor/rect-ng.js', 
-//       'src/admin/vendor/plugins/metisMenu/metisMenu.min.js', 
-//       'src/admin/vendor/plugins/morris/morris.min.js', 'src/admin/vendor/plugins/morris/raphael.min.js'
-//     ])
-//     .pipe(concat('vendor.js'))
-//     .pipe(gulp.dest('www/admin/scripts'))
-//     .pipe(rename({ suffix: '.min' }))
-//     .pipe(gulp.dest('www/admin/scripts'));
-// });
-
-// gulp.task('modernizrAdmin', function() {
-//   return gulp.src(['src/admin/vendor/modernizr.min.js'])
-//     .pipe(gulp.dest('www/admin/scripts'));
-// });
-
-// gulp.task('fontVendorAdmin', function() {
-//   return gulp.src(['src/admin/fonts/*', 'src/admin/vendor/font-awesome/fonts/*'])
-//     .pipe(gulp.dest('www/admin/fonts'));
-// });
-
-// gulp.task('fontAwesomeAdmin', function() {
-//   return gulp.src(['src/admin/vendor/font-awesome/css/font-awesome.min.css'])
-//     .pipe(gulp.dest('www/admin/styles'));
-// });
-
 
 // TRANSLATIONS
 
 gulp.task('po:extract', ['html', 'jade', 'javascript'], function () {
   var gettext = require('gulp-angular-gettext');
-  return gulp.src(['www/views/**/*.html', 'www/scripts/**/*.js'])
+  return gulp.src(poExtractPaths)
     .pipe(gettext.extract('template.pot', {
         // options to pass to angular-gettext-tools... 
     }))
@@ -245,12 +151,13 @@ gulp.task('po:extract', ['html', 'jade', 'javascript'], function () {
  
 gulp.task('po:compile', function () {
   var gettext = require('gulp-angular-gettext');
-  return gulp.src('po/**/*.po')
+  return gulp.src(poCompilePaths)
     .pipe(gettext.compile({
         // options to pass to angular-gettext-tools... 
         // format: 'json'
     }))
-    .pipe(gulp.dest('src/scripts/lang/'));
+    .pipe(gulp.dest('src/scripts/lang/'))
+    .pipe(livereload());
 });
 
 
@@ -295,21 +202,30 @@ gulp.task('styles', ['scss'], function(){});
 
 gulp.task('make', function(cb) {
     var runSequence = require('run-sequence');
-    runSequence('clean', ['markup', 'scripts', 'styles', 'media', 'vendor', 'admin'/*, 'makeAdmin'*/], function (err) {
-      if (!err) return cb();
-      
-      //if any error happened in the previous tasks, exit with a code > 0
-      var exitCode = 2;
-      console.log('[ERROR] gulp make task failed', err);
-      console.log('[FAIL] gulp make task failed - exiting with code ' + exitCode);
-      return process.exit(exitCode);
-    });
-});
+    if(config.IS_PRODUCTION) {
 
-// gulp.task('makeAdmin', function(cb) {
-//     var runSequence = require('run-sequence');
-//     runSequence(['htmlAdmin', 'jadeAdmin', 'lessAdmin', 'cssVendorAdmin', 'javascriptAdmin', 'modernizrAdmin', 'jsVendorAdmin', 'fontVendorAdmin', 'fontAwesomeAdmin'], cb);
-// });
+      runSequence(['markup', 'scripts', 'styles', 'media', 'vendor'], function (err) {
+        if (!err) return cb();
+        
+        //if any error happened in the previous tasks, exit with a code > 0
+        var exitCode = 2;
+        console.log('[ERROR] gulp make task failed', err);
+        console.log('[FAIL] gulp make task failed - exiting with code ' + exitCode);
+        return process.exit(exitCode);
+      });
+    }
+    else {
+      runSequence('clean', ['markup', 'scripts', 'styles', 'media', 'vendor'], function (err) {
+        if (!err) return cb();
+        
+        //if any error happened in the previous tasks, exit with a code > 0
+        var exitCode = 3;
+        console.log('[ERROR] gulp make task failed', err);
+        console.log('[FAIL] gulp make task failed - exiting with code ' + exitCode);
+        return process.exit(exitCode);
+      });
+    }
+});
 
 // Default task
 gulp.task('default', function() {
@@ -336,6 +252,8 @@ gulp.task('debug', ['make', 'nodemon'], function () {
   var watch = require('gulp-watch');
   var batch = require('gulp-batch');
   
+  livereload.listen({quiet: true});
+  
   watch('src/**/*.js', batch(function (events, done) { gulp.start(['jshint', 'javascript'], done); }));
   watch('src/**/*.scss', batch(function (events, done) { gulp.start('scss', done); }));
   watch('src/**/*.css', batch(function (events, done) { gulp.start('scss', done); }));
@@ -349,7 +267,7 @@ gulp.task('debug', ['make', 'nodemon'], function () {
 gulp.task('nodemon', function () {
   var nodemon = require('gulp-nodemon');
 
-  nodemon({ script: 'server.js', ext: 'js', ignore: ['src', 'tools', 'www', 'test', 'node_modules', 'admin'], nodeArgs: ['--debug']  })
+  nodemon({ script: 'server.js', ext: 'js', ignore: ['src', 'tools', 'www', 'test', 'node_modules'], nodeArgs: ['--debug']  })
     .on('change', function(){
       console.log('Server has changed, restarting...');
     })
@@ -359,7 +277,7 @@ gulp.task('nodemon', function () {
 });
 
 gulp.task('todo', shell.task([
-  'notes combate.server.js models/ controllers/ src/styles/ src/scripts/ src/views/ || echo "You need to install notes by running \'sudo npm install -g notes\' "'
+  'notes *.js models/ controllers/ src/styles/ src/scripts/ src/views/ || echo "You need to install notes by running \'sudo npm install -g notes\' "'
 ]));
 
 gulp.task('deps', shell.task([
