@@ -15,15 +15,20 @@ if(config.USE_URL_ALIAS) {
             rg += angularPaths[i] + "|";
     }
     var regex = new RegExp("^\/(" + rg + ")");
+    
+    var wwwRoot = process.cwd() + "/src";
+    var aliasContent = fs.readFileSync(wwwRoot + '/index.html');
+
 
     module.exports = function(req, res, next) {
         var parts = url.parse(req.url);
 
         var matched = parts.pathname.match(regex);
         if( matched ) {
-            req.url = matched[2] || '/'; // rewrite to index
+            res.setHeader('Content-Type', 'text/html');
+            res.send(aliasContent);
         }
-        next();
+        else return next();
     };
 
     console.log((new Date()).toJSON() + " | Enabling HTML5 routes (server.alias.js) for /" + angularPaths.join(' /'));

@@ -6,11 +6,14 @@ This project is a boilerplate of a web site built on AngularJS, Node/Express, Mo
 Featuring:
 
 * Jade templating engine
+* SASS
 * Angular gettext translations
-* Generates PoEdit-ready template files
+* Generates PoEdit-ready translation templates
 * Angular ng-annotate for minified code
+* Angular template caching
 * Automatic make on push to heroku
-* Instagram API library
+* Bower support
+* Live reload
 
 # Get Started
 Clone the project into your computer:
@@ -19,9 +22,9 @@ Clone the project into your computer:
 	$ cd herokubp
 
 ## Dependencies
-To start the application with fail safety, you will need to install ```forever``` on the server.
+To start the application with fail safety, you will need to install ```pm2``` on the server.
 
-	$ sudo npm install -g forever
+	$ sudo npm install -g pm2
 	
 To manage the app in development and production environments, we will make use of ```gulp```.
 
@@ -36,16 +39,21 @@ To manage the app, the following actions are available
 
 	$ cd herokubp
 	$ gulp
-	
+
 	Usage:
 	
-	   $ gulp make      Compile the web files to 'www'
-	   $ gulp debug     Compile, start the app locally and reload with Nodemon
-	   $ gulp test      Run the test suite located on test/index.js
-	 
-	   $ gulp start     Start the server as a daemon (implies gulp make)
-	   $ gulp restart   Restart the server (implies gulp make)
-	   $ gulp stop      Stop the server
+	 $ gulp make          Compiles the app from src/ to www/
+	 $ gulp debug         Compile, start the app locally and reload with 	Nodemon
+	 $ gulp po:extract    Generate the translation template (po/	template.pot)
+	 $ gulp po:compile    Generate the files for each language (po/*.js)
+	  
+	 $ gulp bower         Downloads the dependencies from bower.json to 	src/vendor
+	 $ gulp readme        Show the readme in the browser
+	  
+	 $ gulp start         Start the server as a daemon (implies gulp make)
+	 $ gulp restart       Restart the server (implies gulp make)
+	 $ gulp stop          Stop the server
+  
 
 The first three ones are intended for the **development environment**. The last three ones are intended to manage the application in a **server**.
 
@@ -74,26 +82,10 @@ The default parameters of the server are defined in ```controllers/config.js```
 
 	var defaults = {
 	    IS_PRODUCTION: false,
-	    ENABLE_TWITTER: false,
-	    ENABLE_INSTAGRAM: false,
-
-	    SERVER_IP: "0.0.0.0",
-
-	    HASHTAG: "#barcelona",
-
+	    
 	    APP_NAME: 'Tvrbo App',
 	    DOMAIN: 'boilerplate.herokuapp.com',
 	    ENSURE_WWW: false,
-
-	    INSTAGRAM_CLIENT_ID: "1234",
-	    INSTAGRAM_CLIENT_SECRET: "1234",
-	    INSTAGRAM_CALLBACK_URL: "http://callback",
-	    INSTAGRAM_ACCESS_TOKEN: "1234",
-
-	    TWITTER_CONSUMER_KEY: "1234",
-	    TWITTER_CONSUMER_SECRET: "1234",
-	    TWITTER_ACCESS_TOKEN: "1234-1234",
-	    TWITTER_ACCESS_TOKEN_SECRET: "1234",
 
 	    HTTP_PORT: process.env.PORT || 8080,
 	    HTTPS_PORT: 8443,
@@ -128,17 +120,17 @@ The default parameters of the server are defined in ```controllers/config.js```
 
 They can be modified right in the file or they can be averriden via environment variables: 
 
-	$ HASHTAG='#test' gulp debug
+	$ HTTP_PORT=3000 gulp debug
 
 
 ##### Notes:
 
-* HTTP/HTTPS ports must be greater than ```1024``` (unless you plan to run the app with root privileges)
+* HTTP and HTTPS ports must be greater than ```1024``` (unless you plan to run the app with root privileges)
 	* Normally you'll set up a proxy server (Apache/nginx) binding the ports 80/443 to the ones you define above
 * If the MongoDB user/password are empty, the server will attempt to connect without authentication
 * Unless you set an HTTP user/password, no HTTP authentication will be requested
-* If ```useHttps``` is false, the keyFile/certFile files will be ignored
-	* If a ```self.caFile``` is not provided, only the private/public keys will be used
+* If ```USE_HTTPS ``` is false, the keyFile/certFile files will be ignored
+	* If a ```CA_FILE ``` is not provided, only the private/public keys will be used
 
 ### Creating a model
 

@@ -239,7 +239,7 @@ gulp.task('default', function() {
   console.log(" $ " + gutil.colors.cyan("gulp po:compile") + "    Generate the files for each language (po/*.js)");
   console.log("  ");
   console.log(" $ " + gutil.colors.cyan("gulp bower") + "         Downloads the dependencies from bower.json to src/vendor");
-  console.log(" $ " + gutil.colors.cyan("gulp readme") + "        Mostra el README.md del projecte en el navegador");
+  console.log(" $ " + gutil.colors.cyan("gulp readme") + "        Show the readme in the browser");
   console.log("  ");
   console.log(" $ " + gutil.colors.cyan("gulp start") + "         Start the server as a daemon (implies gulp make)");
   console.log(" $ " + gutil.colors.cyan("gulp restart") + "       Restart the server (implies gulp make)");

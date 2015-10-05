@@ -1,11 +1,11 @@
 var config = require('./config.js');
 
-if(config.USE_CACHE && config.IS_PRODUCTION) {
+if(config.IS_PRODUCTION && config.USE_CACHE) {
 
     var localCache = {};
     var fs = require('fs');
 
-    var wwwRoot = __dirname + "/../www";
+    var wwwRoot = process.cwd() + "/www";
 
     exports.populate = function() {
         localCache['/'] = fs.readFileSync(wwwRoot + '/index.html');

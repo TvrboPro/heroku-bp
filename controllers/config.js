@@ -8,27 +8,11 @@ nconf.env();//.argv();
 
 var defaults = {
     IS_PRODUCTION: false,
-    ENABLE_TWITTER: false,
-    ENABLE_INSTAGRAM: false,
-
-    SERVER_IP: "0.0.0.0",
-
-    HASHTAG: "#barcelona",
-
+    
     APP_NAME: 'Tvrbo App',
     DOMAIN: 'boilerplate.herokuapp.com',
     ENSURE_WWW: false,
     PATH_ALIAS: ['view'],
-
-    INSTAGRAM_CLIENT_ID: "1234",
-    INSTAGRAM_CLIENT_SECRET: "1234",
-    INSTAGRAM_CALLBACK_URL: "http://callback",
-    INSTAGRAM_ACCESS_TOKEN: "1234",
-
-    TWITTER_CONSUMER_KEY: "1234",
-    TWITTER_CONSUMER_SECRET: "1234",
-    TWITTER_ACCESS_TOKEN: "1234-1234",
-    TWITTER_ACCESS_TOKEN_SECRET: "1234",
 
     HTTP_PORT: process.env.PORT || 8080,
     HTTPS_PORT: 8443,
