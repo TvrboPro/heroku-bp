@@ -1,8 +1,8 @@
 
 angular.module('tvrbo', ['ngRoute', 'tvrbo.controllers', 'tvrbo.factories', 'gettext', 'templates'])
-.config(function($routeProvider, $locationProvider) {
+.config(function($routeProvider, $locationProvider, $compileProvider) {
 
-		$routeProvider
+    $routeProvider
 
     // IMPORTANT: CHECK server.alias.js
     .when('/', {
@@ -18,6 +18,8 @@ angular.module('tvrbo', ['ngRoute', 'tvrbo.controllers', 'tvrbo.factories', 'get
     });
 
     // $locationProvider.html5Mode(true);
+    
+    $compileProvider.debugInfoEnabled(false);
 })
 
 .run(function(gettextCatalog, $lang){
